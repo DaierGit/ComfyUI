@@ -1671,7 +1671,6 @@ class SaveImage:
         self.output_dir = folder_paths.get_output_directory()
         self.type = "output"
         self.prefix_append = ""
-        self.compress_level = 4
 
     @classmethod
     def INPUT_TYPES(s):
@@ -1696,7 +1695,7 @@ class SaveImage:
 
     CATEGORY = "image"
     ESSENTIALS_CATEGORY = "Basics"
-    DESCRIPTION = "Saves the input images to your ComfyUI output directory."
+    DESCRIPTION = "Saves the input images to your ComfyUI output directory as JPG."
     SEARCH_ALIASES = ["save", "save image", "export image", "output image", "write image", "download"]
 
     def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
@@ -1706,18 +1705,13 @@ class SaveImage:
         for (batch_number, image) in enumerate(images):
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-            metadata = None
-            if not args.disable_metadata:
-                metadata = PngInfo()
-                if prompt is not None:
-                    metadata.add_text("prompt", json.dumps(prompt))
-                if extra_pnginfo is not None:
-                    for x in extra_pnginfo:
-                        metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            file = f"{filename_with_batch_num}_{counter:05}_.png"
-            img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
+            file = f"{filename_with_batch_num}_{counter:05}_.jpg"
+            
+            # Guardar como JPG con calidad 98
+            img.save(os.path.join(full_output_folder, file), "JPEG", quality=98)
+            
             results.append({
                 "filename": file,
                 "subfolder": subfolder,
